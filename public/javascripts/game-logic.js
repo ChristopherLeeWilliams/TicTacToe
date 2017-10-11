@@ -1,16 +1,15 @@
 
 let isXTurn = true; 
-
+let turnCount = 0;
 function checkArray(arr) {
     for(let i = 0; i < arr.length; i++) {
         // check horizontals
-        if (i < (arr.length-2)) {
-            if(arr[i] && arr[i+1] && arr[i+2]) { return true; }
-        }
-        // check verticals and diagonals
-        if (i < 3) {
-            if(arr[i] && arr[i+3] && arr[i+6]) { return true; }
-            if(arr[i] && arr[i+2] && arr[i+4]) { return true; }
+        if( (arr[0]&&arr[1]&&arr[2]) || (arr[3]&&arr[4]&&arr[5]) || (arr[6]&&arr[7]&&arr[8])) {
+            return true;
+        } else if ( (arr[0]&&arr[3]&&arr[6]) || (arr[1]&&arr[4]&&arr[7]) || (arr[2]&&arr[5]&&arr[8])) {
+            return true;
+        } else if ( (arr[0]&&arr[4]&&arr[8]) || (arr[2]&&arr[4]&&arr[6])) {
+            return true;
         }
     }
     return false;
@@ -18,14 +17,11 @@ function checkArray(arr) {
 
 function checkForWinner() {
     let squares = document.getElementsByClassName("square");
-    let size = squares.length;
-    
     let Os = [];
     let Xs = [];
-    
     var val;
     
-    for (let i = 0; i < size; i++) {
+    for (let i = 0; i < squares.length; i++) {
         val = squares[i].innerHTML;
         if (val === "X") {
             Xs[i] = true;
@@ -44,14 +40,18 @@ function checkForWinner() {
     } else if(checkArray(Os)) {
         display.innerHTML = "O's Win!";
     } else {
-        display.innerHTML = "";
+        if(turnCount >= 9) {
+            display.innerHTML = "Cat's Game!";   
+        } else {
+            display.innerHTML = "";    
+        }
     }
 }
 
 function handleClick(e) {
     if (e.target.innerHTML) 
         return; 
-        
+    turnCount += 1;
     e.target.innerHTML = isXTurn ? "X" : "O";
     isXTurn = !isXTurn; 
     showGameStatus();
