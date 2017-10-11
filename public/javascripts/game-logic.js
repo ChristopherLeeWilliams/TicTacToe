@@ -78,9 +78,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
     for (let i = 0; i < squares.length; i++) {
         squares[i].addEventListener("click", handleClick );
     }
-    
-    
-    
     showGameStatus(); 
+    
+    document.getElementById("page-refresh").addEventListener("click", function() {
+       window.location.href = "/"; 
+    });
   
 }); 
