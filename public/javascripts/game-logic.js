@@ -1,87 +1,171 @@
-
 let isXTurn = true; 
-let turnCount = 0;
-function checkArray(arr) {
-    for(let i = 0; i < arr.length; i++) {
-        // check horizontals
-        if( (arr[0]&&arr[1]&&arr[2]) || (arr[3]&&arr[4]&&arr[5]) || (arr[6]&&arr[7]&&arr[8])) {
-            return true;
-        } else if ( (arr[0]&&arr[3]&&arr[6]) || (arr[1]&&arr[4]&&arr[7]) || (arr[2]&&arr[5]&&arr[8])) {
-            return true;
-        } else if ( (arr[0]&&arr[4]&&arr[8]) || (arr[2]&&arr[4]&&arr[6])) {
-            return true;
-        }
-    }
-    return false;
-}
+let boardState = Array(9).fill(null); 
 
-function checkForWinner() {
-    let squares = document.getElementsByClassName("square");
-    let Os = [];
-    let Xs = [];
-    var val;
+
+function assignClickHandlers() {
+    let squares = document.getElementsByClassName("square"); 
     
     for (let i = 0; i < squares.length; i++) {
-        val = squares[i].innerHTML;
-        if (val === "X") {
-            Xs[i] = true;
-            Os[i] = false;
-        } else if (val === "O") {
-            Os[i] = true;
-            Xs[i] = false;
-        } else {
-            Xs[i] = false;
-            Os[i] = false;
-        }
-    }
-    let display = document.getElementById("winner");
-    if(checkArray(Xs)) {
-        display.innerHTML = "X's Win!";
-    } else if(checkArray(Os)) {
-        display.innerHTML = "O's Win!";
-    } else {
-        if(turnCount >= 9) {
-            display.innerHTML = "Cat's Game!";   
-        } else {
-            display.innerHTML = "";    
-        }
+        squares[i].addEventListener("click", handleClick )
     }
 }
 
+
+function calculateWinner() {
+        
+    const lines = [
+        [0, 1, 2], 
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+    ]; 
+    
+    let squareValues = document.getElementsByClassName("square"); 
+    
+    for (var i = 0; i < lines.length; i++) {
+        var a = lines[i][0]; 
+        var b = lines[i][1];
+        var c = lines[i][2]; 
+        
+        if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+            return boardState[a]; 
+        }
+    }
+    
+    return null; 
+          
+}
+    
+
+function addViewsToDOM() {
+    var rootDiv = document.getElementById("root");
+    rootDiv.appendChild(renderGameView()); 
+    assignClickHandlers();
+}
+
+
+function getGameStatus() {
+    
+    let winner = calculateWinner(); 
+    
+    if (winner) {
+        return "Player " + winner + " won!"; 
+    } else if (!hasAvailableMove()) {
+        return "Cats Game"; 
+    } else {
+        return  "Next player to move: " + (isXTurn ? "X" : "O"); 
+    }
+     
+}
+
+
 function handleClick(e) {
-    if (e.target.innerHTML) 
+    if (boardState[e.target.dataset.position] || calculateWinner()) 
         return; 
-    turnCount += 1;
-    e.target.innerHTML = isXTurn ? "X" : "O";
+        
+    boardState[e.target.dataset.position] = isXTurn ? "X" : "O";
     isXTurn = !isXTurn; 
-    showGameStatus();
-    checkForWinner();
+    reloadViews();
+}
+
+
+function hasAvailableMove() {
+  for (let i = 0; i < boardState.length; i++) {
+      if (!boardState[i]) 
+        return true; 
+  }
+  return false; 
+}
+
+
+function reloadViews() {
+    removeViewsFromDOM(); 
+    addViewsToDOM();
+}   
+
+
+function removeViewsFromDOM() {
+    var rootDiv = document.getElementById("root");
+    
+    while (rootDiv.childElementCount > 0) {
+        rootDiv.removeChild(rootDiv.firstChild);
+    }
+     
+}
+
+
+function renderBoardView() {
+    var containerDiv = document.createElement('div'); 
+        
+    var gameStatusDiv = document.createElement('div');
+    gameStatusDiv.className = 'status';
+    gameStatusDiv.innerHTML = this.getGameStatus();
+    containerDiv.appendChild(gameStatusDiv); 
+    
+    // add 3 rows with 3 buttons each to make the board
+    
+    for (let i = 0; i < 3; i++) {
+        let boardRowDiv = document.createElement('div');
+        boardRowDiv.className = 'board-row';
+        containerDiv.appendChild(boardRowDiv);
+        
+        for (let j = 0; j < 3; j++) {
+            let squareButton = renderSquareView(j*3 + i); 
+            boardRowDiv.appendChild(squareButton);
+        }
+    }
+    
+    return containerDiv; 
+}
+
+
+function renderGameView() {
+    let gameDiv = document.createElement('div');
+    gameDiv.className = 'game';
+    
+    let boardDiv = document.createElement('div');
+    boardDiv.className = 'game-board'; 
+    boardDiv.append(renderBoardView()); 
+    gameDiv.appendChild(boardDiv); 
+    
+    
+    let historyDiv = document.createElement('div');
+    historyDiv.className = 'game-info'; 
+    gameDiv.appendChild(historyDiv); 
+    
+    return gameDiv; 
+}
+
+
+function renderSquareView(position) {
+    var squareButton = document.createElement('button');
+    squareButton.className = 'square';
+    squareButton.dataset.position = position;
+    squareButton.innerHTML = boardState[position];
+    return squareButton; 
 }
 
 
 function showGameStatus() {
     let status = document.getElementsByClassName("status")[0]; 
-    status.innerHTML =  "Next player to move: " + (isXTurn ? "X" : "O");  
-}
-
-function showWinner() {
-    let squares = document.getElementsByClassName("square"); 
-    for (let i = 0; i < squares.length; i++) {
-        squares[i].addEventListener("click", handleClick );
+    
+    let winner = calculateWinner(); 
+    
+    if (winner) {
+        status.innerHTML = "Player " + winner + " won!"; 
+    } else if (!hasAvailableMove()) {
+        status.innerHTML = "Cats Game"; 
+    } else {
+        status.innerHTML =  "Next player to move: " + (isXTurn ? "X" : "O"); 
     }
+     
 }
 
 
 document.addEventListener("DOMContentLoaded", function(event) { 
-    let squares = document.getElementsByClassName("square"); 
-    
-    for (let i = 0; i < squares.length; i++) {
-        squares[i].addEventListener("click", handleClick );
-    }
-    showGameStatus(); 
-    
-    document.getElementById("page-refresh").addEventListener("click", function() {
-       window.location.href = "/"; 
-    });
-  
+    addViewsToDOM();
 }); 
